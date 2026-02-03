@@ -1,10 +1,10 @@
 // app/api/send-email/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/mongodb';
-import LeadAuditModel from '@/models/LeadAudit';
-import { generateColdEmail } from '@/lib/emailGenerator';
-import { sendEmail } from '@/lib/emailSender';
+import { connectDB } from '../../lib/mongodb';
+import LeadAuditModel from '../../models/LeadAudit';
+import { generateColdEmail } from '../../lib/emailGenerator';
+import { sendEmail } from '../../lib/emailSender';
 
 /**
  * POST /api/send-email
@@ -12,8 +12,8 @@ import { sendEmail } from '@/lib/emailSender';
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { auditId, recipientEmail } = body;
+    const requestBody = await request.json();
+    const { auditId, recipientEmail } = requestBody;
 
     // Validate input
     if (!auditId || !recipientEmail) {

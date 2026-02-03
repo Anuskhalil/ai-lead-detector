@@ -1,8 +1,8 @@
 // app/api/test-db/route.ts
 
 import { NextResponse } from 'next/server';
-import { connectDB } from '@/lib/mongodb';
-import LeadAuditModel from '@/models/LeadAudit';
+import { connectDB } from '../../lib/mongodb';
+import LeadAuditModel from '../../models/LeadAudit';
 
 /**
  * Test endpoint to verify database connection

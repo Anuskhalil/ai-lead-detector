@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LeadAudit } from '@/lib/types';
+import { LeadAudit } from '../app/lib/types';
 import AuditCard from './AuditCard';
 import { Loader2, RefreshCw } from 'lucide-react';
 
@@ -103,7 +103,7 @@ export default function AuditList({ refreshTrigger }: AuditListProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {audits.map((audit) => (
-            <AuditCard key={audit._id} audit={audit} />
+            <AuditCard key={audit._id} audit={audit} onEmailSent={fetchAudits} />
           ))}
         </div>
       )}

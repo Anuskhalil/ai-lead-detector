@@ -28,7 +28,7 @@ export async function scrapeWebsite(url: string): Promise<ScrapedData> {
     }
 
     browser = await puppeteer.launch({
-      headless: 'new',
+      headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 
@@ -146,7 +146,7 @@ export async function scrapeGoogleMaps(location: string): Promise<string[]> {
     console.log(`🗺️ Searching Google Maps for: ${location}`);
     
     browser = await puppeteer.launch({
-      headless: 'new',
+      headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 

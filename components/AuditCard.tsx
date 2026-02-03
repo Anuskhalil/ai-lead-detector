@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { CheckCircle, XCircle, ExternalLink, Mail, Loader2 } from 'lucide-react';
-import { LeadAudit } from '@/lib/types';
+import { LeadAudit } from '../app/lib/types';
 
 interface AuditCardProps {
   audit: LeadAudit;
