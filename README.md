@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Agency Auditor Pro 🚀
 
-## Getting Started
+An AI-powered lead generation and technical audit tool for digital agencies. Automatically analyze websites, identify deficiencies, and generate personalized outreach emails.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- 🤖 **AI-Powered Analysis**: Uses OpenAI to understand business context and generate insights
+- 🔍 **Technical Auditing**: Automated website scraping and deficiency detection
+- 📧 **Personalized Outreach**: Generate custom cold emails based on audit results
+- 📊 **Dashboard & Analytics**: Track leads, scores, and outreach performance
+- 📍 **Location-Based Scraping**: Find and audit businesses in specific locations
+- 💾 **MongoDB Integration**: Persistent storage for leads and audit results
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Node.js
+- **Database**: MongoDB with Mongoose
+- **Web Scraping**: Puppeteer, Cheerio
+- **AI Integration**: OpenAI API
+- **Email**: Nodemailer
+- **Charts**: Recharts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Prerequisites
 
-## Learn More
+- Node.js 18+ 
+- MongoDB (local or Atlas)
+- OpenAI API key
+- (Optional) Google Places API key for location-based scraping
 
-To learn more about Next.js, take a look at the following resources:
+## Installation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/agency-auditor.git
+   cd agency-auditor
