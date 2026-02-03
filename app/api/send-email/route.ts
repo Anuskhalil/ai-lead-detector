@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate email content using OpenAI
+    // Generate email content using Google Gemini
     const businessName = audit.businessName || 'your business';
     const emailBody = await generateColdEmail(
       businessName,

@@ -12,7 +12,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  * @returns Success status
  */
 export async function sendEmail(
-  to: 'anuskhalil77@gmail.com' | string,
+  to: 'anuskhalil77@gmail.com',
   subject: string,
   body: string
 ): Promise<{ success: boolean; error?: string }> {
