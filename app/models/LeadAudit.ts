@@ -1,14 +1,15 @@
 // models/LeadAudit.ts
 
 import mongoose, { Schema, Model } from 'mongoose';
-import { LeadAudit } from '@/lib/types';
+import { LeadAudit } from '../lib/types';
 
-/**
- * Mongoose Schema for Lead Audit
- * Defines the structure of documents in MongoDB
- */
 const LeadAuditSchema = new Schema<LeadAudit>(
   {
+    userId: {
+      type: String,
+      required: true,
+      index: true,
+    },
     url: {
       type: String,
       required: true,
@@ -66,19 +67,15 @@ const LeadAuditSchema = new Schema<LeadAudit>(
     },
   },
   {
-    timestamps: true, // Automatically add createdAt and updatedAt
+    timestamps: true,
   }
 );
 
-// Create indexes for better query performance
+// Create indexes
+LeadAuditSchema.index({ userId: 1, createdAt: -1 });
 LeadAuditSchema.index({ url: 1 });
 LeadAuditSchema.index({ status: 1 });
-LeadAuditSchema.index({ createdAt: -1 });
 
-/**
- * Export the model
- * Check if model already exists to prevent recompilation errors in development
- */
 const LeadAuditModel: Model<LeadAudit> =
   mongoose.models.LeadAudit || mongoose.model<LeadAudit>('LeadAudit', LeadAuditSchema);
 

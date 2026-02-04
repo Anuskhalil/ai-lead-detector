@@ -1,34 +1,36 @@
 // lib/types.ts
 
-/**
- * Main data structure for a Lead Audit
- * This represents a single website audit with all its analysis
- */
 export interface LeadAudit {
-  _id?: string;                    // MongoDB ID (auto-generated)
-  url: string;                     // Website URL
-  businessName?: string;           // Business name (extracted from site)
-  location?: string;               // Location (if searched by location)
-  contactEmail?: string;           // Contact email (extracted from site)
+  _id?: string;
+  userId: string;                  // NEW: User who created this audit
+  url: string;
+  businessName?: string;
+  location?: string;
+  contactEmail?: string;
   
-  // Web Services Analysis
   webServices: {
-    seoTagsPresent: boolean;       // Does site have SEO meta tags?
-    isMobileResponsive: boolean;   // Is site mobile-friendly?
-    techStack: string[];           // Technologies used (React, WordPress, etc.)
+    seoTagsPresent: boolean;
+    isMobileResponsive: boolean;
+    techStack: string[];
   };
 
-  // Automation Analysis
   automation: {
-    hasChatbot: boolean;           // Does site have a chatbot?
-    hasVoiceAssistant: boolean;    // Does site have voice assistant?
-    hasSocialBot: boolean;         // Does site have social media bot?
+    hasChatbot: boolean;
+    hasVoiceAssistant: boolean;
+    hasSocialBot: boolean;
   };
 
-  // Results
-  detectedProblems: string[];      // List of issues found
-  status: 'Audited' | 'Email Sent' | 'Saved';  // Current status
+  detectedProblems: string[];
+  status: 'Audited' | 'Email Sent' | 'Saved';
   
-  createdAt?: Date;                // When audit was created
-  updatedAt?: Date;                // When audit was last updated
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface User {
+  _id?: string;
+  name: string;
+  email: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

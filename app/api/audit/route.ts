@@ -1,6 +1,8 @@
 // app/api/audit/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../api/auth/[...nextauth]/route';
 import { connectDB } from '../../lib/mongodb';
 import LeadAuditModel from '../../models/LeadAudit';
 import { scrapeWebsite, scrapeGoogleMaps } from '../../lib/scraper';
@@ -8,10 +10,21 @@ import { createLeadAuditFromScrapedData } from '../../lib/analyzer';
 
 /**
  * POST /api/audit
- * Create audit(s) - supports both single URL and location mode
+ * Create audit(s) - requires authentication
  */
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const userId = (session.user as any).id;
     const body = await request.json();
     const { mode, input } = body;
 
@@ -29,7 +42,12 @@ export async function POST(request: NextRequest) {
       console.log('🔍 Single URL mode');
       const scrapedData = await scrapeWebsite(input);
       const auditData = createLeadAuditFromScrapedData(scrapedData);
-      const audit = await LeadAuditModel.create(auditData);
+      
+      // Add userId
+      const audit = await LeadAuditModel.create({
+        ...auditData,
+        userId,
+      });
       
       return NextResponse.json({
         success: true,
@@ -37,7 +55,7 @@ export async function POST(request: NextRequest) {
       });
       
     } else if (mode === 'location') {
-      // Location mode - scrape Google Maps first
+      // Location mode
       console.log('🗺️ Location mode');
       const websites = await scrapeGoogleMaps(input);
       
@@ -48,14 +66,18 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Scrape each website and create audits
       const audits = [];
       
       for (const website of websites) {
         try {
           const scrapedData = await scrapeWebsite(website);
           const auditData = createLeadAuditFromScrapedData(scrapedData, input);
-          const audit = await LeadAuditModel.create(auditData);
+          
+          // Add userId
+          const audit = await LeadAuditModel.create({
+            ...auditData,
+            userId,
+          });
           audits.push(audit);
         } catch (error) {
           console.error(`Failed to audit ${website}:`, error);
@@ -86,17 +108,33 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/audit
- * Retrieve all audits
+ * Retrieve user's audits - requires authentication
  */
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const userId = (session.user as any).id;
+    
     await connectDB();
 
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    const query = status ? { status } : {};
+    // Only get audits for this user
+    const query: any = { userId };
+    if (status) {
+      query.status = status;
+    }
     
     const audits = await LeadAuditModel
       .find(query)

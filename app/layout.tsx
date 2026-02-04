@@ -1,19 +1,25 @@
-import type { Metadata } from 'next'
-import './globals.css'
+// app/layout.tsx
+import type { Metadata } from 'next';
+import './globals.css';
+import SessionProvider from '@/components/SessionProvider';
 
 export const metadata: Metadata = {
-  title: 'AI Lead Gen & Agency Auditor',
-  description: 'Automated lead generation and technical audit tool',
-}
+  title: 'LeadGen AI - AI-Powered Lead Generation & Website Auditing',
+  description: 'Automatically discover leads, audit websites, and generate personalized outreach emails with AI',
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <SessionProvider>
+          {children}
+        </SessionProvider>
+      </body>
     </html>
-  )
+  );
 }
