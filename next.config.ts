@@ -1,9 +1,9 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
   reactStrictMode: true,
-  experimental: {
-    serverComponentsExternalPackages: ['puppeteer'],
-  },
+
+  serverExternalPackages: ['puppeteer'],
 }
 
-module.exports = nextConfig
+export default nextConfig
