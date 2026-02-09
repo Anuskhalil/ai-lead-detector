@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../api/auth/[...nextauth]/route';
 import { connectDB } from '../../lib/mongodb';
 import LeadAuditModel from '../../models/LeadAudit';
-import { scrapeWebsite, scrapeGoogleMaps } from '../../lib/scraper';
+import { scrapeWebsite, scrapeGoogleMaps } from '../../lib/comprehensiveScraper';
 import { createLeadAuditFromScrapedData } from '../../lib/analyzer';
 
 /**

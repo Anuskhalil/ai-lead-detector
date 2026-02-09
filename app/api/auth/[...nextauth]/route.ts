@@ -15,58 +15,84 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Please enter email and password');
+        try {
+
+          if (!credentials?.email || !credentials?.password) {
+            throw new Error('Please enter your email and password');
+          }
+
+          await connectDB();
+
+          const user = await UserModel.findOne({ 
+            email: credentials.email.toLowerCase().trim() 
+          });
+
+          if (!user) {
+            console.log('❌ User not found:', credentials.email);
+            throw new Error('Invalid email or password');
+          }
+
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isPasswordValid) {
+            console.log('❌ Invalid password for user:', credentials.email);
+            throw new Error('Invalid email or password');
+          }
+
+          console.log('✅ User logged in successfully:', user.email);
+
+          return {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+          };
+
+        } catch (error: any) {
+          console.error('❌ Authentication error:', error.message);
+          throw error;
         }
-
-        await connectDB();
-
-        // Find user
-        const user = await UserModel.findOne({ email: credentials.email });
-
-        if (!user) {
-          throw new Error('Invalid email or password');
-        }
-
-        // Check password
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          throw new Error('Invalid email or password');
-        }
-
-        return {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-        };
       },
     }),
   ],
+  
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+
   pages: {
     signIn: '/login',
+    signOut: '/',
+    error: '/login', 
   },
+  
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.name = user.name;
+        token.email = user.email;
       }
       return token;
     },
+    
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.id;
+        session.user.name = token.name;
+        session.user.email = token.email;
       }
       return session;
     },
   },
+  
   secret: process.env.NEXTAUTH_SECRET,
+  
+  // Debug mode (disable in production)
+  debug: process.env.NODE_ENV === 'development',
 };
 
 const handler = NextAuth(authOptions);
