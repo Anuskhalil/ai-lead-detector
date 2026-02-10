@@ -5,8 +5,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../api/auth/[...nextauth]/route';
 import { connectDB } from '../../lib/mongodb';
 import LeadAuditModel from '../../models/LeadAudit';
-import { scrapeWebsite, scrapeGoogleMaps } from '../../lib/comprehensiveScraper';
-import { createLeadAuditFromScrapedData } from '../../lib/analyzer';
+import scrapeWebsite from '../../lib/comprehensiveScraper';
+import scrapeGoogleMaps from '../../lib/comprehensiveScraper';
+import { createLeadAuditFromComprehensive } from '../../lib/analyzer';
 
 /**
  * POST /api/audit
@@ -40,9 +41,9 @@ export async function POST(request: NextRequest) {
     if (mode === 'single') {
       // Single URL mode
       console.log('🔍 Single URL mode');
-      const scrapedData = await scrapeWebsite(input);
-      const auditData = createLeadAuditFromScrapedData(scrapedData);
-      
+      const scrapedData = await scrapeWebsite(input, { allowPartial: false });
+      const auditData = createLeadAuditFromComprehensive(scrapedData, input);
+
       // Add userId
       const audit = await LeadAuditModel.create({
         ...auditData,
@@ -57,22 +58,22 @@ export async function POST(request: NextRequest) {
     } else if (mode === 'location') {
       // Location mode
       console.log('🗺️ Location mode');
-      const websites = await scrapeGoogleMaps(input);
-      
-      if (websites.length === 0) {
+      // scrapeGoogleMaps now requires two arguments: input and userId (or a second argument as appropriate).
+      const websites = await scrapeGoogleMaps(input, userId);
+
+      if (!websites || !Array.isArray(websites) || websites.length === 0) {
         return NextResponse.json(
           { success: false, error: 'No websites found for this location' },
           { status: 404 }
         );
       }
 
-      const audits = [];
-      
+      const audits: any[] = [];
+
       for (const website of websites) {
         try {
-          const scrapedData = await scrapeWebsite(website);
-          const auditData = createLeadAuditFromScrapedData(scrapedData, input);
-          
+          const scrapedData = await scrapeWebsite(website, { allowPartial: false });
+          const auditData = createLeadAuditFromComprehensive(scrapedData, website);
           // Add userId
           const audit = await LeadAuditModel.create({
             ...auditData,
@@ -89,12 +90,6 @@ export async function POST(request: NextRequest) {
         data: audits,
         message: `Created ${audits.length} audits`,
       });
-      
-    } else {
-      return NextResponse.json(
-        { success: false, error: 'Invalid mode' },
-        { status: 400 }
-      );
     }
     
   } catch (error: any) {

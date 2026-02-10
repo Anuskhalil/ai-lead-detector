@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Search, MapPin, Loader2, Globe, Building2, Sparkles, Target } from 'lucide-react';
 
 interface AuditFormProps {
-  onAuditComplete: () => void;
+  onAuditComplete: (result: any) => void;
 }
 
 export default function AuditForm({ onAuditComplete }: AuditFormProps) {
@@ -57,7 +57,7 @@ export default function AuditForm({ onAuditComplete }: AuditFormProps) {
       if (data.success) {
         setInput('');
         setIsValidUrl(true);
-        onAuditComplete();
+        onAuditComplete(data.data);
         if (mode === 'location') {
           // Show success toast instead of alert
           showNotification(`Successfully created ${data.data.length} audits!`, 'success');

@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import AuditForm from '@/components/AuditForm';
 import ResultsDisplay from '@/components/ResultsDisplay';
-import { MagnifyingGlassIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon } from '@heroicons/react/24/outline';
 
 export default function AuditPage() {
   const [auditResult, setAuditResult] = useState<any>(null);
