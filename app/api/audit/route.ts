@@ -1,23 +1,50 @@
 // app/api/audit/route.ts
 
+export const runtime = "nodejs";
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../api/auth/[...nextauth]/route';
 import { connectDB } from '../../lib/mongodb';
 import LeadAuditModel from '../../models/LeadAudit';
-import scrapeWebsite from '../../lib/comprehensiveScraper';
-import scrapeGoogleMaps from '../../lib/comprehensiveScraper';
-import { createLeadAuditFromComprehensive } from '../../lib/analyzer';
+import { comprehensiveAIAnalysis } from '../../lib/analyzer';
+
+/**
+ * Transform full AI analysis into DB-friendly structure
+ */
+function createLeadAuditFromComprehensive(data: any, url: string) {
+  return {
+    url,
+    businessName: data.businessName,
+    contactEmail: data.contactEmail,
+
+    seoScore: data.pagespeed.seo,
+    performanceScore: data.pagespeed.performance,
+    accessibilityScore: data.pagespeed.accessibility,
+    bestPracticesScore: data.pagespeed.bestPractices,
+
+    designScore: data.designAnalysis.overallScore,
+
+    techStack: data.techStack,
+    chatbots: data.chatbots,
+    socialBots: data.socialBots,
+
+    problems: data.problems,
+    opportunities: data.opportunities,
+
+    estimatedValue: data.opportunities.estimatedValue,
+
+    status: 'completed',
+  };
+}
 
 /**
  * POST /api/audit
- * Create audit(s) - requires authentication
  */
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
     const session = await getServerSession(authOptions);
-    
+
     if (!session || !session.user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -39,61 +66,30 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     if (mode === 'single') {
-      // Single URL mode
-      console.log('🔍 Single URL mode');
-      const scrapedData = await scrapeWebsite(input, { allowPartial: false });
-      const auditData = createLeadAuditFromComprehensive(scrapedData, input);
+      console.log('🔍 Running AI 5-Layer Audit...');
 
-      // Add userId
+      const analysis = await comprehensiveAIAnalysis(input);
+      const auditData = createLeadAuditFromComprehensive(analysis, input);
+
       const audit = await LeadAuditModel.create({
         ...auditData,
         userId,
       });
-      
+
       return NextResponse.json({
         success: true,
         data: audit,
       });
-      
-    } else if (mode === 'location') {
-      // Location mode
-      console.log('🗺️ Location mode');
-      // scrapeGoogleMaps now requires two arguments: input and userId (or a second argument as appropriate).
-      const websites = await scrapeGoogleMaps(input, userId);
-
-      if (!websites || !Array.isArray(websites) || websites.length === 0) {
-        return NextResponse.json(
-          { success: false, error: 'No websites found for this location' },
-          { status: 404 }
-        );
-      }
-
-      const audits: any[] = [];
-
-      for (const website of websites) {
-        try {
-          const scrapedData = await scrapeWebsite(website, { allowPartial: false });
-          const auditData = createLeadAuditFromComprehensive(scrapedData, website);
-          // Add userId
-          const audit = await LeadAuditModel.create({
-            ...auditData,
-            userId,
-          });
-          audits.push(audit);
-        } catch (error) {
-          console.error(`Failed to audit ${website}:`, error);
-        }
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: audits,
-        message: `Created ${audits.length} audits`,
-      });
     }
-    
+
+    return NextResponse.json(
+      { success: false, error: 'Invalid mode' },
+      { status: 400 }
+    );
+
   } catch (error: any) {
     console.error('❌ Audit API error:', error);
+
     return NextResponse.json(
       { success: false, error: error.message || 'Internal server error' },
       { status: 500 }
@@ -103,13 +99,11 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/audit
- * Retrieve user's audits - requires authentication
  */
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
     const session = await getServerSession(authOptions);
-    
+
     if (!session || !session.user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -118,21 +112,13 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = (session.user as any).id;
-    
     await connectDB();
 
     const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    // Only get audits for this user
-    const query: any = { userId };
-    if (status) {
-      query.status = status;
-    }
-    
     const audits = await LeadAuditModel
-      .find(query)
+      .find({ userId })
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean();
@@ -141,8 +127,10 @@ export async function GET(request: NextRequest) {
       success: true,
       data: audits,
     });
+
   } catch (error: any) {
     console.error('❌ Audit GET error:', error);
+
     return NextResponse.json(
       { success: false, error: error.message || 'Internal server error' },
       { status: 500 }

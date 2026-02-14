@@ -1,9 +1,10 @@
-import type { NextConfig } from 'next'
+const nextConfig = {
+  serverExternalPackages: [
+    "puppeteer",
+    "wappalyzer",
+    "@google/generative-ai"
+  ],
+};
 
-const nextConfig: NextConfig = {
-  reactStrictMode: true,
+module.exports = nextConfig;
 
-  serverExternalPackages: ['puppeteer'],
-}
-
-export default nextConfig
