@@ -1,23 +1,151 @@
-// components/AuditCard.tsx
+// components/AuditCard.tsx - BULLETPROOF VERSION
 'use client';
 
-import { useState } from 'react';
-import { CheckCircle, XCircle, ExternalLink, Mail, Loader2, AlertCircle, TrendingUp } from 'lucide-react';
-import { LeadAudit } from '../app/lib/types';
+import { useState, useEffect } from 'react';
+import { 
+  CheckCircle, XCircle, ExternalLink, Mail, Loader2, AlertCircle, 
+  TrendingUp, Award, Bot, Code
+} from 'lucide-react';
 
 interface AuditCardProps {
-  audit: LeadAudit;
+  audit: any;
   onEmailSent: () => void;
 }
 
 export default function AuditCard({ audit, onEmailSent }: AuditCardProps) {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(audit.status === 'Email Sent');
-  const [expanded, setExpanded] = useState(false);
+
+  // COMPREHENSIVE DEBUG - Log everything we receive
+  useEffect(() => {
+    console.log('========================================');
+    console.log('AUDIT CARD - FULL DEBUG');
+    console.log('========================================');
+    console.log('Full audit object:', audit);
+    console.log('');
+    console.log('Direct fields:');
+    console.log('  audit.seoScore:', audit.seoScore);
+    console.log('  audit.designScore:', audit.designScore);
+    console.log('  audit.performanceScore:', audit.performanceScore);
+    console.log('');
+    console.log('Nested pagespeed:');
+    console.log('  audit.pagespeed:', audit.pagespeed);
+    console.log('  audit.pagespeed?.seo:', audit.pagespeed?.seo);
+    console.log('');
+    console.log('Tech Stack:');
+    console.log('  audit.techStack:', audit.techStack);
+    console.log('  audit.techStack?.frameworks:', audit.techStack?.frameworks);
+    console.log('');
+    console.log('Chatbots:');
+    console.log('  audit.chatbots:', audit.chatbots);
+    console.log('  audit.chatbots?.detected:', audit.chatbots?.detected);
+    console.log('  audit.chatbots?.providers:', audit.chatbots?.providers);
+    console.log('');
+    console.log('Opportunities:');
+    console.log('  audit.opportunities:', audit.opportunities);
+    console.log('  audit.opportunities?.estimatedValue:', audit.opportunities?.estimatedValue);
+    console.log('========================================');
+  }, [audit]);
+
+  // SAFE EXTRACTION - Try ALL possible paths
+  const getSeoScore = () => {
+    return audit.seoScore ?? 
+           audit.pagespeed?.seo ?? 
+           audit.webServices?.seoScore ?? 
+           0;
+  };
+
+  const getPerformanceScore = () => {
+    return audit.performanceScore ?? 
+           audit.pagespeed?.performance ?? 
+           0;
+  };
+
+  const getAccessibilityScore = () => {
+    return audit.accessibilityScore ?? 
+           audit.pagespeed?.accessibility ?? 
+           0;
+  };
+
+  const getDesignScore = () => {
+    return audit.designScore ?? 
+           audit.designAnalysis?.overallScore ?? 
+           0;
+  };
+
+  const getTechStack = () => {
+    const frameworks = audit.techStack?.frameworks ?? [];
+    const cms = audit.techStack?.cms ?? [];
+    const cssFrameworks = audit.techStack?.cssFrameworks ?? [];
+    const allTech = [...frameworks, ...cms, ...cssFrameworks];
+    return allTech.filter(Boolean);
+  };
+
+  const getChatbotInfo = () => {
+    const detected = audit.chatbots?.detected ?? 
+                    audit.automation?.hasChatbot ?? 
+                    false;
+    const providers = audit.chatbots?.providers ?? [];
+    const isAIPowered = audit.chatbots?.isAIPowered ?? false;
+    return { detected, providers, isAIPowered };
+  };
+
+  const getSocialBots = () => {
+    const detected = audit.socialBots?.detected ?? 
+                    audit.automation?.hasSocialBot ?? 
+                    false;
+    const platforms = audit.socialBots?.platforms ?? [];
+    return { detected, platforms };
+  };
+
+  const getEstimatedValue = () => {
+    return audit.opportunities?.estimatedValue ?? 
+           audit.estimatedValue ?? 
+           0;
+  };
+
+  const getProblems = () => {
+    const critical = audit.problems?.critical ?? [];
+    const important = audit.problems?.important ?? [];
+    const minor = audit.problems?.minor ?? [];
+    const legacy = audit.detectedProblems ?? [];
+    return {
+      critical,
+      important,
+      minor,
+      all: [...critical, ...important, ...minor, ...legacy].filter(Boolean)
+    };
+  };
+
+  // Extract all values
+  const seoScore = getSeoScore();
+  const performanceScore = getPerformanceScore();
+  const accessibilityScore = getAccessibilityScore();
+  const designScore = getDesignScore();
+  const techStack = getTechStack();
+  const chatbot = getChatbotInfo();
+  const socialBots = getSocialBots();
+  const estimatedValue = getEstimatedValue();
+  const problems = getProblems();
+
+  // Calculate overall score
+  const overallScore = Math.round((seoScore + (designScore * 10)) / 2);
+
+  // Log computed values
+  console.log('COMPUTED VALUES:', {
+    seoScore,
+    performanceScore,
+    accessibilityScore,
+    designScore,
+    overallScore,
+    techStackCount: techStack.length,
+    chatbotDetected: chatbot.detected,
+    estimatedValue
+  });
 
   const handleSendEmail = async () => {
     if (!audit.contactEmail) {
-      alert('No contact email found for this business');
+      alert('No contact email found');
       return;
     }
 
@@ -25,9 +153,7 @@ export default function AuditCard({ audit, onEmailSent }: AuditCardProps) {
     try {
       const response = await fetch('/api/send-email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           auditId: audit._id,
           recipientEmail: audit.contactEmail,
@@ -38,9 +164,9 @@ export default function AuditCard({ audit, onEmailSent }: AuditCardProps) {
       if (data.success) {
         setEmailSent(true);
         onEmailSent();
-        alert('✅ Email sent successfully!');
+        alert('✅ Email sent!');
       } else {
-        alert('❌ ' + (data.error || 'Failed to send email'));
+        alert('❌ ' + (data.error || 'Failed'));
       }
     } catch (error) {
       alert('❌ Error sending email');
@@ -49,207 +175,269 @@ export default function AuditCard({ audit, onEmailSent }: AuditCardProps) {
     }
   };
 
-  const StatusBadge = ({ label, value }: { label: string; value: boolean }) => (
-    <div className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors">
-      <span className="text-sm text-gray-700 font-medium">{label}</span>
-      {value ? (
-        <div className="flex items-center gap-1">
-          <CheckCircle className="w-4 h-4 text-green-500" />
-          <span className="text-xs text-green-600 font-medium">Pass</span>
-        </div>
-      ) : (
-        <div className="flex items-center gap-1">
-          <XCircle className="w-4 h-4 text-red-500" />
-          <span className="text-xs text-red-600 font-medium">Fail</span>
-        </div>
-      )}
-    </div>
-  );
-
-  const calculateScore = () => {
-    const checks = [
-      audit.webServices.seoTagsPresent,
-      audit.webServices.isMobileResponsive,
-      audit.automation.hasChatbot,
-      audit.automation.hasVoiceAssistant,
-      audit.automation.hasSocialBot
-    ];
-    const passed = checks.filter(Boolean).length;
-    return Math.round((passed / checks.length) * 100);
-  };
-
-  const score = calculateScore();
-
   return (
-    <div className="group bg-white border border-gray-200 rounded-2xl p-6 shadow-glass hover:shadow-card-hover transition-all duration-300 hover:border-primary-300">
+    <div className="bg-white border-2 border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-all">
+      
       {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <div className="flex-1">
-          <div className="flex items-start gap-3 mb-3">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-              score >= 70 ? 'bg-green-100' : score >= 40 ? 'bg-amber-100' : 'bg-red-100'
-            }`}>
-              <span className={`text-lg font-bold ${
-                score >= 70 ? 'text-green-700' : score >= 40 ? 'text-amber-700' : 'text-red-700'
+      <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-6 rounded-t-2xl text-white">
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-3">
+              {/* Score Badge */}
+              <div className={`w-20 h-20 rounded-2xl flex flex-col items-center justify-center border-4 border-white shadow-lg text-white font-black ${
+                overallScore >= 70 ? 'bg-green-500' : 
+                overallScore >= 40 ? 'bg-amber-500' : 'bg-red-500'
               }`}>
-                {score}
-              </span>
+                <div className="text-4xl">{overallScore}</div>
+                <div className="text-xs">SCORE</div>
+              </div>
+              
+              <div>
+                <h3 className="text-2xl font-bold mb-1">
+                  {audit.businessName || 'Unknown'}
+                </h3>
+                <a
+                  href={audit.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/90 hover:text-white text-sm flex items-center gap-1"
+                >
+                  {audit.url}
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-gray-900 mb-1 line-clamp-1">
-                {audit.businessName || 'Unknown Business'}
-              </h3>
-              <a
-                href={audit.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary-600 hover:text-primary-700 flex items-center gap-2 text-sm group/url"
-              >
-                <span className="truncate max-w-[200px]">{audit.url}</span>
-                <ExternalLink className="w-3 h-3 opacity-0 group-hover/url:opacity-100 transition-opacity" />
-              </a>
-            </div>
+            
+            {audit.contactEmail && (
+              <div className="bg-white/20 rounded-lg px-3 py-2 text-sm flex items-center gap-2 w-fit">
+                <Mail className="w-4 h-4" />
+                {audit.contactEmail}
+              </div>
+            )}
           </div>
           
-          {audit.contactEmail && (
-            <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
-              <Mail className="w-4 h-4" />
-              <span className="truncate">{audit.contactEmail}</span>
-            </div>
-          )}
-        </div>
-        
-        <div className="flex flex-col items-end gap-2">
-          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-            emailSent
-              ? 'bg-gradient-to-r from-green-100 to-green-50 text-green-700 border border-green-200'
-              : 'bg-gradient-to-r from-primary-100 to-primary-50 text-primary-700 border border-primary-200'
-          }`}>
-            {emailSent ? 'Email Sent' : audit.status}
-          </span>
-          <span className="text-xs text-gray-500">
-            {audit.createdAt ? new Date(audit.createdAt).toLocaleDateString() : 'N/A'}
-          </span>
-        </div>
-      </div>
-
-      {/* Tech Stack */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" />
-            Tech Stack
-          </p>
-          <span className="text-xs text-gray-500">{audit.webServices.techStack.length} detected</span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {audit.webServices.techStack.slice(0, 3).map((tech, idx) => (
-            <span
-              key={idx}
-              className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium border border-gray-200"
-            >
-              {tech}
-            </span>
-          ))}
-          {audit.webServices.techStack.length > 3 && (
-            <span className="px-3 py-1.5 bg-gray-50 text-gray-500 rounded-lg text-xs">
-              +{audit.webServices.techStack.length - 3} more
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Status Checks - Collapsible */}
-      <div className="border-t border-gray-100 pt-4 mb-4">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="flex items-center justify-between w-full mb-3 group"
-        >
-          <span className="text-sm font-semibold text-gray-700">Technical Audit</span>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">
-              {expanded ? 'Hide details' : 'Show details'}
-            </span>
-            <div className={`transform transition-transform ${expanded ? 'rotate-180' : ''}`}>
-              ▼
+          <div className="text-right">
+            <div className={`px-4 py-2 rounded-full text-sm font-bold ${
+              emailSent ? 'bg-green-500 text-white' : 'bg-white text-primary-700'
+            }`}>
+              {emailSent ? '✓ Sent' : 'Audited'}
             </div>
           </div>
-        </button>
-        
-        {expanded && (
-          <div className="space-y-1 animate-slide-up">
-            <StatusBadge label="SEO Tags" value={audit.webServices.seoTagsPresent} />
-            <StatusBadge label="Mobile Responsive" value={audit.webServices.isMobileResponsive} />
-            <StatusBadge label="Chatbot" value={audit.automation.hasChatbot} />
-            <StatusBadge label="Voice Assistant" value={audit.automation.hasVoiceAssistant} />
-            <StatusBadge label="Social Bot" value={audit.automation.hasSocialBot} />
+        </div>
+
+        {/* Value - Prominent */}
+        {estimatedValue > 0 && (
+          <div className="mt-4 bg-white/20 backdrop-blur rounded-xl p-4 border-2 border-white/30">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="text-sm opacity-90">💰 POTENTIAL VALUE</div>
+                <div className="text-4xl font-black">
+                  ${estimatedValue.toLocaleString()}
+                </div>
+              </div>
+              <TrendingUp className="w-12 h-12 opacity-50" />
+            </div>
           </div>
         )}
       </div>
 
-      {/* Detected Problems */}
-      {audit.detectedProblems.length > 0 && (
+      {/* Content */}
+      <div className="p-6">
+        
+        {/* SCORES */}
         <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertCircle className="w-5 h-5 text-amber-500" />
-            <p className="text-sm font-semibold text-amber-700">
-              Issues Found ({audit.detectedProblems.length})
-            </p>
+          <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <Award className="w-5 h-5" />
+            📊 SCORES
+          </h4>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {/* SEO */}
+            <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-4">
+              <div className="text-xs font-bold text-blue-700 mb-1">SEO</div>
+              <div className="text-4xl font-black text-blue-900">{seoScore}</div>
+              <div className="text-xs text-blue-600">/100</div>
+              <div className="mt-2 h-2 bg-blue-200 rounded-full">
+                <div className="h-full bg-blue-600 rounded-full" style={{ width: `${seoScore}%` }} />
+              </div>
+            </div>
+
+            {/* Performance */}
+            <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4">
+              <div className="text-xs font-bold text-green-700 mb-1">PERFORMANCE</div>
+              <div className="text-4xl font-black text-green-900">{performanceScore}</div>
+              <div className="text-xs text-green-600">/100</div>
+              <div className="mt-2 h-2 bg-green-200 rounded-full">
+                <div className="h-full bg-green-600 rounded-full" style={{ width: `${performanceScore}%` }} />
+              </div>
+            </div>
+
+            {/* Accessibility */}
+            <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-4">
+              <div className="text-xs font-bold text-purple-700 mb-1">ACCESS</div>
+              <div className="text-4xl font-black text-purple-900">{accessibilityScore}</div>
+              <div className="text-xs text-purple-600">/100</div>
+              <div className="mt-2 h-2 bg-purple-200 rounded-full">
+                <div className="h-full bg-purple-600 rounded-full" style={{ width: `${accessibilityScore}%` }} />
+              </div>
+            </div>
+
+            {/* Design */}
+            <div className="bg-pink-50 border-2 border-pink-300 rounded-xl p-4">
+              <div className="text-xs font-bold text-pink-700 mb-1">DESIGN</div>
+              <div className="text-4xl font-black text-pink-900">{designScore}</div>
+              <div className="text-xs text-pink-600">/10</div>
+              <div className="mt-2 h-2 bg-pink-200 rounded-full">
+                <div className="h-full bg-pink-600 rounded-full" style={{ width: `${designScore * 10}%` }} />
+              </div>
+            </div>
           </div>
-          <div className="bg-gradient-to-r from-amber-50 to-amber-25 border border-amber-200 rounded-xl p-4">
+        </div>
+
+        {/* TECH STACK */}
+        {techStack.length > 0 && (
+          <div className="mb-6 bg-gray-50 rounded-xl p-4 border-2 border-gray-200">
+            <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <Code className="w-5 h-5" />
+              ⚙️ TECH STACK ({techStack.length})
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {techStack.map((tech, idx) => (
+                <span
+                  key={idx}
+                  className="px-3 py-1.5 bg-white border-2 border-gray-300 rounded-lg text-sm font-bold text-gray-800"
+                >
+                  {tech}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* AI DETECTION */}
+        <div className="mb-6">
+          <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <Bot className="w-5 h-5" />
+            🤖 AI DETECTION
+          </h4>
+          
+          <div className="space-y-3">
+            {/* Chatbot */}
+            <div className={`flex items-center justify-between p-4 rounded-xl border-2 ${
+              chatbot.detected 
+                ? 'bg-green-50 border-green-400' 
+                : 'bg-red-50 border-red-400'
+            }`}>
+              <div className="flex items-center gap-3">
+                {chatbot.detected ? (
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                ) : (
+                  <XCircle className="w-6 h-6 text-red-600" />
+                )}
+                <div>
+                  <div className="font-bold">Chatbot</div>
+                  {chatbot.providers.length > 0 && (
+                    <div className="text-sm text-gray-600">
+                      {chatbot.providers.join(', ')}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className={`text-3xl font-black ${
+                chatbot.detected ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {chatbot.detected ? '✓' : '✗'}
+              </div>
+            </div>
+
+            {/* Social Bots */}
+            <div className={`flex items-center justify-between p-4 rounded-xl border-2 ${
+              socialBots.detected 
+                ? 'bg-green-50 border-green-400' 
+                : 'bg-gray-50 border-gray-300'
+            }`}>
+              <div className="flex items-center gap-3">
+                {socialBots.detected ? (
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                ) : (
+                  <div className="w-6 h-6 rounded-full border-3 border-gray-400" />
+                )}
+                <div>
+                  <div className="font-bold">Social Bots</div>
+                  {socialBots.platforms.length > 0 && (
+                    <div className="text-sm text-gray-600">
+                      {socialBots.platforms.join(', ')}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className={`text-3xl font-black ${
+                socialBots.detected ? 'text-green-600' : 'text-gray-400'
+              }`}>
+                {socialBots.detected ? '✓' : '✗'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* PROBLEMS */}
+        {problems.all.length > 0 && (
+          <div className="mb-6 bg-amber-50 rounded-xl p-4 border-2 border-amber-300">
+            <h4 className="font-bold text-amber-900 mb-3 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              ⚠️ ISSUES ({problems.all.length})
+            </h4>
             <ul className="space-y-2">
-              {audit.detectedProblems.slice(0, 2).map((problem, idx) => (
-                <li key={idx} className="text-sm text-amber-800 flex items-start gap-3">
-                  <div className="w-5 h-5 bg-amber-100 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
-                    <span className="text-amber-600 text-xs">!</span>
-                  </div>
+              {problems.all.slice(0, 5).map((problem, idx) => (
+                <li key={idx} className="text-sm text-amber-800 flex items-start gap-2">
+                  <span className="text-amber-600 font-bold">•</span>
                   <span>{problem}</span>
                 </li>
               ))}
-              {audit.detectedProblems.length > 2 && (
-                <li className="text-sm text-amber-600">
-                  +{audit.detectedProblems.length - 2} more issues...
+              {problems.all.length > 5 && (
+                <li className="text-sm text-amber-700 font-bold">
+                  +{problems.all.length - 5} more issues
                 </li>
               )}
             </ul>
           </div>
-        </div>
-      )}
-
-      {/* Action Button */}
-      <button
-        onClick={handleSendEmail}
-        disabled={sendingEmail || !audit.contactEmail || emailSent}
-        className={`w-full py-3 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
-          emailSent
-            ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
-            : sendingEmail || !audit.contactEmail
-            ? 'bg-gray-100 text-gray-400'
-            : 'bg-gradient-to-r from-accent-500 to-primary-500 hover:from-accent-600 hover:to-primary-600 text-gray-600 shadow-md hover:shadow-lg transform hover:-translate-y-0.5'
-        }`}
-      >
-        {sendingEmail ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Sending...
-          </>
-        ) : emailSent ? (
-          <>
-            <CheckCircle className="w-5 h-5" />
-            Email Sent
-          </>
-        ) : !audit.contactEmail ? (
-          <>
-            <AlertCircle className="w-5 h-5" />
-            Manual Outreach Required
-          </>
-        ) : (
-          <>
-            <Mail className="w-5 h-5" />
-            Send Pitch Email
-          </>
         )}
-      </button>
+
+        {/* ACTION */}
+        <button
+          onClick={handleSendEmail}
+          disabled={sendingEmail || !audit.contactEmail || emailSent}
+          className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all ${
+            emailSent
+              ? 'bg-green-600 text-white'
+              : sendingEmail || !audit.contactEmail
+              ? 'bg-gray-300 text-gray-500'
+              : 'bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:shadow-xl transform hover:-translate-y-1'
+          }`}
+        >
+          {sendingEmail ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Sending...
+            </>
+          ) : emailSent ? (
+            <>
+              <CheckCircle className="w-5 h-5" />
+              Email Sent
+            </>
+          ) : !audit.contactEmail ? (
+            <>
+              <AlertCircle className="w-5 h-5" />
+              No Email
+            </>
+          ) : (
+            <>
+              <Mail className="w-5 h-5" />
+              Send Pitch {estimatedValue > 0 && `($${estimatedValue.toLocaleString()})`}
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 }

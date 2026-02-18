@@ -1,4 +1,4 @@
-// app/api/audit/route.ts
+// app/api/audit/route.ts - FINAL CORRECTED VERSION
 
 export const runtime = "nodejs";
 
@@ -10,32 +10,151 @@ import LeadAuditModel from '../../models/LeadAudit';
 import { comprehensiveAIAnalysis } from '../../lib/analyzer';
 
 /**
- * Transform full AI analysis into DB-friendly structure
+ * Transform production analyzer output to DB structure
+ * SAVES ALL DATA FROM TERMINAL
  */
 function createLeadAuditFromComprehensive(data: any, url: string) {
-  return {
+  console.log('\n📦 Transforming analyzer data for database...');
+  console.log('Data received from analyzer:', {
+    hasPagespeed: !!data.pagespeed,
+    hasTechStack: !!data.techStack,
+    hasChatbots: !!data.chatbots,
+    hasOpportunities: !!data.opportunities,
+    hasDesignAnalysis: !!data.designAnalysis,
+  });
+  
+  // Extract scores - THE FIX IS HERE!
+  const seoScore = data.pagespeed?.seo || 0;
+  const performanceScore = data.pagespeed?.performance || 0;
+  const accessibilityScore = data.pagespeed?.accessibility || 0;
+  const bestPracticesScore = data.pagespeed?.bestPractices || 0;
+  const designScore = data.designAnalysis?.overallScore || 0;
+  
+  console.log('📊 Extracted Scores:');
+  console.log('   SEO:', seoScore);
+  console.log('   Performance:', performanceScore);
+  console.log('   Design:', designScore);
+  
+  // Build COMPLETE audit object
+  const auditData = {
     url,
-    businessName: data.businessName,
-    contactEmail: data.contactEmail,
-
-    seoScore: data.pagespeed.seo,
-    performanceScore: data.pagespeed.performance,
-    accessibilityScore: data.pagespeed.accessibility,
-    bestPracticesScore: data.pagespeed.bestPractices,
-
-    designScore: data.designAnalysis.overallScore,
-
-    techStack: data.techStack,
-    chatbots: data.chatbots,
-    socialBots: data.socialBots,
-
-    problems: data.problems,
-    opportunities: data.opportunities,
-
-    estimatedValue: data.opportunities.estimatedValue,
-
-    status: 'completed',
+    businessName: data.businessName || 'Unknown Business',
+    contactEmail: data.contactEmail || null,
+    
+    // ===== NEW STRUCTURE (with scores) =====
+    seoScore,                    // ✅ SAVES THIS!
+    performanceScore,            // ✅ SAVES THIS!
+    accessibilityScore,          // ✅ SAVES THIS!
+    bestPracticesScore,          // ✅ SAVES THIS!
+    designScore,                 // ✅ SAVES THIS!
+    
+    // Full pagespeed data
+    pagespeed: {
+      seo: seoScore,
+      performance: performanceScore,
+      accessibility: accessibilityScore,
+      bestPractices: bestPracticesScore,
+      issues: data.pagespeed?.issues || [],
+      opportunities: data.pagespeed?.opportunities || [],
+    },
+    
+    // Tech Stack
+    techStack: {
+      frameworks: data.techStack?.frameworks || [],
+      cms: data.techStack?.cms || [],
+      cssFrameworks: data.techStack?.cssFrameworks || [],
+      analytics: data.techStack?.analytics || [],
+      cdn: data.techStack?.cdn || [],
+      hosting: data.techStack?.hosting || [],
+      programming: data.techStack?.programming || [],
+      all: data.techStack?.all || [],
+    },
+    
+    // Chatbots
+    chatbots: {
+      detected: data.chatbots?.detected || false,
+      providers: data.chatbots?.providers || [],
+      isAIPowered: data.chatbots?.isAIPowered || false,
+      networkEndpoints: data.chatbots?.networkEndpoints || [],
+    },
+    
+    // Social Bots
+    socialBots: {
+      detected: data.socialBots?.detected || false,
+      platforms: data.socialBots?.platforms || [],
+    },
+    
+    // Voice Assistant  
+    voiceAssistant: {
+      detected: data.voiceAssistant?.detected || false,
+      implementation: data.voiceAssistant?.implementation || [],
+    },
+    
+    // Design Analysis (full Gemini data)
+    designAnalysis: {
+      layoutQuality: data.designAnalysis?.layoutQuality || 0,
+      colorScheme: data.designAnalysis?.colorScheme || 0,
+      typography: data.designAnalysis?.typography || 0,
+      visualHierarchy: data.designAnalysis?.visualHierarchy || 0,
+      modernityScore: data.designAnalysis?.modernityScore || 0,
+      overallScore: designScore,
+      rating: data.designAnalysis?.rating || 'Unknown',
+      feedback: data.designAnalysis?.feedback || [],
+      strengths: data.designAnalysis?.strengths || [],
+      recommendations: data.designAnalysis?.recommendations || [],
+    },
+    
+    // Problems
+    problems: {
+      critical: data.problems?.critical || [],
+      important: data.problems?.important || [],
+      minor: data.problems?.minor || [],
+    },
+    
+    // Opportunities
+    opportunities: {
+      webServices: data.opportunities?.webServices || [],
+      aiServices: data.opportunities?.aiServices || [],
+      estimatedValue: data.opportunities?.estimatedValue || 0,
+    },
+    
+    // ===== OLD STRUCTURE (backward compatibility) =====
+    webServices: {
+      seoTagsPresent: seoScore > 50,
+      isMobileResponsive: true,
+      techStack: [
+        ...(data.techStack?.frameworks || []),
+        ...(data.techStack?.cms || []),
+        ...(data.techStack?.cssFrameworks || []),
+      ],
+    },
+    
+    automation: {
+      hasChatbot: data.chatbots?.detected || false,
+      hasVoiceAssistant: data.voiceAssistant?.detected || false,
+      hasSocialBot: data.socialBots?.detected || false,
+    },
+    
+    detectedProblems: [
+      ...(data.problems?.critical || []),
+      ...(data.problems?.important || []),
+      ...(data.problems?.minor || []),
+    ],
+    
+    estimatedValue: data.opportunities?.estimatedValue || 0,
+    
+    status: 'Audited' as const,
   };
+  
+  console.log('✅ Transformation complete:');
+  console.log('   Business:', auditData.businessName);
+  console.log('   seoScore:', auditData.seoScore, '← WILL BE SAVED!');
+  console.log('   designScore:', auditData.designScore, '← WILL BE SAVED!');
+  console.log('   chatbots.detected:', auditData.chatbots.detected);
+  console.log('   estimatedValue:', auditData.estimatedValue);
+  console.log('');
+  
+  return auditData;
 }
 
 /**
@@ -66,15 +185,23 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     if (mode === 'single') {
-      console.log('🔍 Running AI 5-Layer Audit...');
+      console.log('🔍 Running AI Analysis...');
 
+      // Run comprehensive analysis
       const analysis = await comprehensiveAIAnalysis(input);
+      
+      // Transform for database
       const auditData = createLeadAuditFromComprehensive(analysis, input);
 
+      // Save to database
+      console.log('💾 Saving to database...');
       const audit = await LeadAuditModel.create({
         ...auditData,
         userId,
       });
+
+      console.log('✅ Saved successfully with ID:', audit._id);
+      console.log('');
 
       return NextResponse.json({
         success: true,
